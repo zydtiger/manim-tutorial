@@ -1,6 +1,6 @@
 ---
 name: manim-tutorial
-description: Create or revise narrated mathematical tutorials with Manim and the manim-tutorial runtime. Use when asked to explain a mathematical idea as an animated video, author a TutorialScene lesson, plan narration beats and captions, or render/review a mathematical Manim tutorial.
+description: Structure, create, or revise narrated mathematical tutorials with Manim and the manim-tutorial runtime. Use when asked to scope a broad concept into projects and lessons, propose a tutorial series, explain a mathematical idea as an animated video, author a TutorialScene lesson, plan narration beats and captions, or render/review a mathematical Manim tutorial.
 ---
 
 # Manim Tutorial
@@ -10,11 +10,13 @@ Use the runtime for execution; keep the teaching decisions in the tutorial.
 
 ## Workflow
 
-1. Establish the audience, prerequisite knowledge, and one central insight.
-2. Plan conceptual beats before coding. For every beat state the speech, concise caption, visible objects, one main visual action, and why the timing helps.
-3. Write a meaningful `<tutorial.py>` filename and subclass `TutorialScene`.
-4. Use `with self.beat(speech=..., caption=...) as beat:`. Give each visual action its own concise `run_time`; let the completed visual hold while the remaining narration plays.
-5. Run `manim-tutorial check --config <config.toml>`, then render with the same explicit config. Inspect the output and revise mathematical, visual, or pacing problems before considering the tutorial complete.
+1. Inspect the existing project structure and establish the audience, prerequisites, and requested learning goal.
+2. When the request needs a new project or multiple lessons, read [references/project-lesson-structure.md](references/project-lesson-structure.md), present a breakdown briefing, and obtain approval before creating or modifying tutorial files. Skip a new approval only when the user has already approved that exact breakdown.
+3. Place the approved work in a coherent existing project or create the approved new project. Give each lesson one central insight and record an ordered multi-lesson syllabus in the project README.
+4. Plan conceptual beats before coding. For every beat state the speech, concise caption, visible objects, one main visual action, and why the timing helps.
+5. Write a meaningful `<tutorial.py>` filename and subclass `TutorialScene`.
+6. Use `with self.beat(speech=..., caption=...) as beat:`. Give each visual action its own concise `run_time`; let the completed visual hold while the remaining narration plays.
+7. Run `manim-tutorial check --config <config.toml>`, then render with the same explicit config. Inspect the output and revise mathematical, visual, or pacing problems before considering the tutorial complete.
 
 Never put a config path, Qwen initialization, FFmpeg command, or output plumbing in tutorial source. Never invent a YAML animation DSL. Do not invoke Manim directly for a `TutorialScene`: the CLI supplies the required explicit runtime configuration.
 
@@ -30,4 +32,4 @@ A beat normally contains one spoken idea, one short caption, and one primary vis
 
 ## Review
 
-Check each claim, sign, axis, label, and transformation. Confirm text is readable at the chosen resolution, captions do not duplicate dense on-screen text, objects remain visually stable across transformations, transitions reach their final state promptly, and the final recap returns to the central insight. Treat render failures as diagnostics: fix missing explicit config or runtime prerequisites rather than adding hidden fallback behavior.
+Check each claim, sign, axis, label, and transformation. For a series, confirm lesson order follows its prerequisites, each lesson owns one central insight, and neighboring lessons neither duplicate nor silently depend on missing material. Confirm text is readable at the chosen resolution, captions do not duplicate dense on-screen text, objects remain visually stable across transformations, transitions reach their final state promptly, and the final recap returns to the central insight. Treat render failures as diagnostics: fix missing explicit config or runtime prerequisites rather than adding hidden fallback behavior.
