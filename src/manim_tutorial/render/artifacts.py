@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
+
+from ..config.errors import ManimTutorialConfigError
+
+ARTIFACT_OWNER_FILENAME = ".manim-tutorial-owner.json"
 
 
 @dataclass(frozen=True)
@@ -24,3 +29,27 @@ def create_artifact_paths(output_directory: Path, tutorial_file: Path) -> Artifa
         audio=root / "audio",
         captioned_video=root / "video_captioned.mp4",
     )
+
+
+def ensure_artifact_owner(artifacts: ArtifactPaths, *, tutorial: Path, scene: str) -> None:
+    """Claim an artifact root or verify that this render already owns it."""
+    expected = {"scene": scene, "tutorial": str(tutorial.resolve())}
+    marker = artifacts.root / ARTIFACT_OWNER_FILENAME
+    if artifacts.root.exists() and marker.exists():
+        try:
+            actual = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ManimTutorialConfigError(f"Invalid artifact ownership marker: {marker}") from exc
+        if actual != expected:
+            raise ManimTutorialConfigError(
+                f"Artifact directory is owned by a different tutorial or scene: {artifacts.root}\n"
+                "Choose a distinct output.directory or rename one tutorial source."
+            )
+        return
+    if artifacts.root.exists() and any(artifacts.root.iterdir()):
+        raise ManimTutorialConfigError(
+            f"Artifact directory has no manim-tutorial ownership marker: {artifacts.root}\n"
+            "Choose a distinct output.directory or clear this directory deliberately."
+        )
+    artifacts.root.mkdir(parents=True, exist_ok=True)
+    marker.write_text(json.dumps(expected, sort_keys=True) + "\n", encoding="utf-8")

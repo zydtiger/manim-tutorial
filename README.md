@@ -82,6 +82,12 @@ Each `beat` records `speech`, `caption`, and narration timing. Captions are
 intentionally allowed to be shorter than speech. Caption burning uses FFmpeg's
 `subtitles` filter (libass) on Linux in V1.
 
+Artifact directories are keyed by tutorial filename stem. A hidden marker binds
+each directory to the resolved tutorial source and scene, so two different
+`vectors.py` files cannot overwrite one another under the same output directory.
+Use a distinct `output.directory` or rename one source if the CLI reports an
+artifact ownership collision.
+
 ## Development
 
 ```bash

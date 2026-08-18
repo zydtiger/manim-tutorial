@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ..captions import burn_captions, write_srt
 from ..config import CONFIG_ENV, ManimTutorialConfigError, TutorialConfig
-from .artifacts import ArtifactPaths, create_artifact_paths
+from .artifacts import ArtifactPaths, create_artifact_paths, ensure_artifact_owner
 
 TIMELINE_ENV = "MANIM_TUTORIAL_TIMELINE_PATH"
 AUDIO_DIR_ENV = "MANIM_TUTORIAL_AUDIO_DIR"
@@ -113,7 +113,7 @@ def render_tutorial(*, tutorial: Path, config: TutorialConfig, scene: str | None
         raise ManimTutorialConfigError(f"Tutorial file does not exist: {tutorial}")
     selected_scene = select_scene(tutorial, scene)
     artifacts = create_artifact_paths(config.output.directory, tutorial)
-    artifacts.root.mkdir(parents=True, exist_ok=True)
+    ensure_artifact_owner(artifacts, tutorial=tutorial, scene=selected_scene)
     artifacts.audio.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
     environment[CONFIG_ENV] = str(config.source_path)
