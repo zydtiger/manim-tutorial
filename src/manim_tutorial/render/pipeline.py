@@ -67,6 +67,18 @@ def _find_video(media_dir: Path) -> Path:
     return matches[0]
 
 
+def _remove_stale_artifacts(artifacts: ArtifactPaths, *, captions_enabled: bool, burn_captions_enabled: bool, beat_count: int) -> None:
+    """Remove only obsolete artifacts whose names are owned by this runtime."""
+    if not captions_enabled:
+        artifacts.subtitles.unlink(missing_ok=True)
+    if not burn_captions_enabled:
+        artifacts.captioned_video.unlink(missing_ok=True)
+    expected_audio = {f"beat_{index:03}.wav" for index in range(1, beat_count + 1)}
+    for audio_file in artifacts.audio.glob("beat_*.wav"):
+        if audio_file.name not in expected_audio:
+            audio_file.unlink()
+
+
 def render_tutorial(*, tutorial: Path, config: TutorialConfig, scene: str | None) -> ArtifactPaths:
     tutorial = tutorial.expanduser().resolve()
     if not tutorial.is_file():
@@ -90,8 +102,15 @@ def render_tutorial(*, tutorial: Path, config: TutorialConfig, scene: str | None
     if not artifacts.timeline.is_file():
         raise ManimTutorialConfigError("TutorialScene did not produce timeline metadata.")
     timeline = json.loads(artifacts.timeline.read_text(encoding="utf-8"))
+    beats = timeline["beats"]
+    _remove_stale_artifacts(
+        artifacts,
+        captions_enabled=config.captions.enabled,
+        burn_captions_enabled=config.captions.enabled and config.captions.burn,
+        beat_count=len(beats),
+    )
     if config.captions.enabled:
-        write_srt(artifacts.subtitles, timeline["beats"])
+        write_srt(artifacts.subtitles, beats)
         if config.captions.burn:
             try:
                 burn_captions(
