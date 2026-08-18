@@ -9,7 +9,8 @@ This repository is intended to remain independent of private tutorial content.
 
 ## Install
 
-Use Python 3.12 with uv:
+Python 3.11 through 3.13 are supported. Python 3.12 is the pinned and
+recommended local development version:
 
 ```bash
 uv sync --python 3.12
