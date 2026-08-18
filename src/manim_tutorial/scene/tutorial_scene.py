@@ -66,6 +66,7 @@ class TutorialScene(VoiceoverScene):
             write_timeline(
                 self._timeline_path,
                 scene=self.__class__.__name__,
+                duration=float(self.renderer.time),
                 tts={"provider": self._tutorial_config.tts.provider, "voice": self._tutorial_config.tts.voice},
                 beats=self._beats,
             )
