@@ -44,3 +44,10 @@ def test_config_rejects_burn_without_captions(tmp_path: Path):
     path.write_text(VALID.replace("enabled = true", "enabled = false"))
     with pytest.raises(ConfigurationValidationError, match="requires captions.enabled"):
         load_config(path, output_base=tmp_path)
+
+
+def test_config_rejects_empty_tts_identity_fields(tmp_path: Path):
+    path = tmp_path / "tutorial.toml"
+    path.write_text(VALID.replace('voice = "Ryan"', 'voice = ""'))
+    with pytest.raises(ConfigurationValidationError, match="tts.voice: must not be empty"):
+        load_config(path, output_base=tmp_path)

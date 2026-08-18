@@ -69,6 +69,9 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
         values.append("  tts.provider: must be 'qwen3'")
     if tts["device"] not in {"auto", "cuda", "cpu"}:
         values.append("  tts.device: must be one of auto, cuda, cpu")
+    for field in ("model", "voice", "language"):
+        if not tts[field].strip():
+            values.append(f"  tts.{field}: must not be empty")
     for section, key in ((captions, "font_size"), (render, "width"), (render, "height"), (render, "fps")):
         if section[key] <= 0:
             name = next(name for name, fields in _SCHEMA.items() if key in fields and fields[key] is int)

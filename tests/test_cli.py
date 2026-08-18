@@ -41,10 +41,19 @@ def test_check_treats_disabled_captions_as_ready(monkeypatch):
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
-    monkeypatch.setattr(check_module, "sys", SimpleNamespace(version="3.12", executable="python"))
+    monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
     ready, lines = check_module.check_environment(_config_with_captions(enabled=False, burn=False))
     assert ready is True
     assert not any("SRT support" in line or "subtitle support" in line for line in lines)
+    assert any("✓ provider: qwen3" in line for line in lines)
+    assert any("• requested model: model (unverified offline" in line for line in lines)
+    assert any("• requested voice: Ryan (unverified" in line for line in lines)
+
+
+def test_python_version_check_is_numeric():
+    assert check_module._supported_python((3, 9)) is False
+    assert check_module._supported_python((3, 10)) is False
+    assert check_module._supported_python((3, 11)) is True
 
 
 def test_check_requires_ffmpeg_subtitles_filter_for_burn(monkeypatch):
