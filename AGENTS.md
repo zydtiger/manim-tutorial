@@ -1,7 +1,7 @@
 # Repository conventions
 
-`manim-tutorial` is a private-targeted reusable runtime and agent skill. It must
-never depend on content from `manim-tutorial-projects` or on machine-local
+`manim-tutorial` is a public reusable runtime and agent skill. It must never
+depend on private tutorial content, private infrastructure, or machine-local
 configuration.
 
 ## Architecture
@@ -19,9 +19,10 @@ configuration.
 - Use `uv` and the `src/` package layout. Target Python 3.12 compatibility.
 - Add focused tests for behavior changes. Tests must not require a model
   download, GPU, or a full Manim render unless explicitly marked integration.
-- Do not add a LICENSE file unless explicitly requested.
-- This repository's eventual target is private. Do not add remotes, publish,
-  push, or expose private infrastructure without explicit approval.
+- Preserve the root MIT license for source and documentation in this repository.
+- This repository's publication target is public GitHub. Keep every committed
+  workflow self-contained, and do not add remotes, publish, push, tag, or
+  release without explicit approval for that action.
 
 ## Git
 

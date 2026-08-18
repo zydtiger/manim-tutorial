@@ -102,3 +102,7 @@ uv run pytest
 Unit tests do not require GPU hardware, a Qwen download, or a full Manim
 render. A real end-to-end render additionally needs Manim's system dependencies
 (including LaTeX), Qwen weights, and a working local TTS setup.
+
+## License
+
+`manim-tutorial` is released under the [MIT License](LICENSE).
