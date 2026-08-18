@@ -30,5 +30,5 @@ configuration.
   sibling worktree, a task branch, and a pull request.
 - Commit format is exactly `prefix: concise imperative summary`, with no scope
   and no trailing period.
-- Allowed prefixes: `feat`, `fix`, `docs`, `test`, `build`, `refactor`,
+- Allowed prefixes: `feat`, `fix`, `docs`, `test`, `build`, `ci`, `refactor`,
   `skill`, `chore`.
