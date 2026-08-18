@@ -40,6 +40,7 @@ def _config_with_captions(*, enabled: bool, burn: bool, device: str = "cpu") -> 
 def test_check_treats_disabled_captions_as_ready(monkeypatch):
     fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
     monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
@@ -60,6 +61,7 @@ def test_python_version_check_is_numeric():
 def test_check_reports_auto_device_cpu_fallback(monkeypatch):
     fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
     monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
@@ -83,6 +85,27 @@ def test_check_reports_broken_torch_without_traceback(monkeypatch):
     ready, lines = check_module.check_environment(_config_with_captions(enabled=False, burn=False))
     assert ready is False
     assert any("cannot import or probe torch: missing CUDA library" in line for line in lines)
+
+
+def test_qwen_probe_accepts_required_api_without_model_loading(monkeypatch):
+    monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
+    monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
+    assert check_module._probe_qwen_tts() == (True, "imported")
+
+
+def test_qwen_probe_reports_broken_import(monkeypatch):
+    original_import = builtins.__import__
+
+    def broken_qwen_import(name, *args, **kwargs):
+        if name == "qwen_tts":
+            raise OSError("missing runtime library")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
+    monkeypatch.setattr(builtins, "__import__", broken_qwen_import)
+    ok, detail = check_module._probe_qwen_tts()
+    assert ok is False
+    assert detail == "cannot import Qwen3TTSModel: missing runtime library"
 
 
 def test_check_requires_ffmpeg_subtitles_filter_for_burn(monkeypatch):
