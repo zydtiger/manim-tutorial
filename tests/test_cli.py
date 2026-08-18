@@ -1,5 +1,6 @@
 import sys
 import builtins
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,17 @@ def test_cli_requires_explicit_config(capsys):
         main(["check"])
     assert exit_info.value.code == 2
     assert "--config is required" in capsys.readouterr().err
+
+
+def test_module_entrypoint_propagates_cli_exit_code():
+    completed = subprocess.run(
+        [sys.executable, "-m", "manim_tutorial", "check"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 2
+    assert "--config is required" in completed.stderr
 
 
 def test_scene_discovery_requires_choice_for_multiple_scenes(tmp_path: Path):
