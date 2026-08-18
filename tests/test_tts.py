@@ -1,6 +1,7 @@
 import pytest
 
-from manim_tutorial.tts.qwen import resolve_device
+from manim_tutorial.config.models import TTSConfig
+from manim_tutorial.tts.qwen import build_voiceover_input_data, resolve_device
 
 
 class _Cuda:
@@ -24,3 +25,23 @@ def test_resolve_auto_device():
 def test_reject_unavailable_cuda():
     with pytest.raises(RuntimeError, match="unavailable"):
         resolve_device("cuda", _Torch(False))
+
+
+def test_voiceover_input_data_matches_cache_contract():
+    config = TTSConfig(
+        provider="qwen3",
+        model="Qwen/model",
+        voice="Ryan",
+        language="English",
+        device="auto",
+    )
+    assert build_voiceover_input_data("Explain eigenvectors.", config) == {
+        "input_text": "Explain eigenvectors.",
+        "service": "qwen3",
+        "config": {
+            "model": "Qwen/model",
+            "voice": "Ryan",
+            "language": "English",
+            "device": "auto",
+        },
+    }

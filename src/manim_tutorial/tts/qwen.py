@@ -7,6 +7,20 @@ from ..config.models import TTSConfig
 from .base import TutorialSpeechService
 
 
+def build_voiceover_input_data(text: str, config: TTSConfig) -> dict[str, object]:
+    """Build the cache identity required by manim-voiceover 0.4."""
+    return {
+        "input_text": text,
+        "service": "qwen3",
+        "config": {
+            "model": config.model,
+            "voice": config.voice,
+            "language": config.language,
+            "device": config.device,
+        },
+    }
+
+
 def resolve_device(requested: str, torch_module: Any) -> str:
     if requested == "auto":
         return "cuda" if torch_module.cuda.is_available() else "cpu"
@@ -61,7 +75,7 @@ class Qwen3SpeechService(TutorialSpeechService):
                 sf.write(target, audio, sample_rate)
                 return VoiceoverData(
                     input_text=text,
-                    input_data={"provider": "qwen3", "voice": config.voice},
+                    input_data=build_voiceover_input_data(text, config),
                     original_audio=str(target),
                 )
 
