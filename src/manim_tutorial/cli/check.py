@@ -46,11 +46,18 @@ def check_environment(config: TutorialConfig) -> tuple[bool, list[str]]:
     device_detail = config.tts.device
     device_ok = torch_spec is not None
     if torch_spec is not None:
-        import torch
+        try:
+            import torch
 
-        resolved = "cuda" if config.tts.device == "auto" and torch.cuda.is_available() else config.tts.device
-        device_detail = f"requested {config.tts.device}, resolved {resolved}"
-        device_ok = resolved != "cuda" or torch.cuda.is_available()
+            cuda_available = bool(torch.cuda.is_available())
+            resolved = ("cuda" if cuda_available else "cpu") if config.tts.device == "auto" else config.tts.device
+            device_detail = f"requested {config.tts.device}, resolved {resolved}"
+            device_ok = resolved != "cuda" or cuda_available
+        except Exception as exc:
+            device_ok = False
+            device_detail = f"cannot import or probe torch: {exc}"
+    else:
+        device_detail = "torch is not installed"
     results.append(_status("TTS device", device_ok, device_detail))
     results.append(_info("requested model", f"{config.tts.model} (unverified offline; downloads on first render)"))
     results.append(_info("requested voice", f"{config.tts.voice} (unverified until the model is available)"))
