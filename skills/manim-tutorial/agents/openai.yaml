@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manim Tutorial"
+  short_description: "Build narrated mathematical Manim tutorials"
+  default_prompt: "Create a clear narrated mathematical tutorial with TutorialScene."

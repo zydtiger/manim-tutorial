@@ -1,0 +1,19 @@
+[tts]
+provider = "qwen3"
+model = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+voice = "Ryan"
+language = "English"
+device = "auto"
+
+[captions]
+enabled = true
+burn = true
+font_size = 42
+
+[render]
+width = 1920
+height = 1080
+fps = 60
+
+[output]
+directory = "./output"

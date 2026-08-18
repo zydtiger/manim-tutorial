@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "manim-tutorial"
+version = "0.1.0"
+description = "Explicit-config runtime for narrated mathematical Manim tutorials."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "manim>=0.21,<0.22",
+  "manim-voiceover>=0.4,<0.5",
+  "qwen-tts==0.1.1",
+  "torch>=2.6",
+]
+
+[project.scripts]
+manim-tutorial = "manim_tutorial.cli.main:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = ["integration: requires installed Manim and rendering prerequisites"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/manim_tutorial"]
