@@ -10,7 +10,14 @@ from .models import CaptionsConfig, OutputConfig, RenderConfig, TTSConfig, Tutor
 
 CONFIG_ENV = "MANIM_TUTORIAL_CONFIG"
 _SCHEMA: dict[str, dict[str, type]] = {
-    "tts": {"provider": str, "model": str, "voice": str, "language": str, "device": str},
+    "tts": {
+        "provider": str,
+        "model": str,
+        "voice": str,
+        "language": str,
+        "device": str,
+        "rate": float,
+    },
     "captions": {"enabled": bool, "burn": bool, "font_size": int},
     "render": {"width": int, "height": int, "fps": int},
     "output": {"directory": str},
@@ -69,6 +76,8 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
         values.append("  tts.provider: must be 'qwen3'")
     if tts["device"] not in {"auto", "cuda", "cpu"}:
         values.append("  tts.device: must be one of auto, cuda, cpu")
+    if not 0.5 <= tts["rate"] <= 2.0:
+        values.append("  tts.rate: must be between 0.5 and 2.0")
     for field in ("model", "voice", "language"):
         if not tts[field].strip():
             values.append(f"  tts.{field}: must not be empty")

@@ -58,8 +58,13 @@ class PointRight(TutorialScene):
             speech="Here is a vector pointing right.",
             caption="A vector pointing right.",
         ) as beat:
-            self.play(GrowArrow(vector), run_time=beat.duration)
+            self.play(GrowArrow(vector), run_time=min(0.8, beat.duration))
 ```
+
+Animations use concise, independent timings. When an animation finishes before
+its narration, the beat holds the completed visual until the voiceover ends.
+`tts.rate` controls pitch-preserving narration speed; `1.15` is a useful brisk
+starting point.
 
 Always render a `TutorialScene` through `manim-tutorial render`. Direct Manim
 invocation fails clearly because the required explicit configuration transport

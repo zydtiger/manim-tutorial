@@ -12,6 +12,7 @@ model = "model"
 voice = "Ryan"
 language = "English"
 device = "auto"
+rate = 1.15
 [captions]
 enabled = true
 burn = true
@@ -50,4 +51,11 @@ def test_config_rejects_empty_tts_identity_fields(tmp_path: Path):
     path = tmp_path / "tutorial.toml"
     path.write_text(VALID.replace('voice = "Ryan"', 'voice = ""'))
     with pytest.raises(ConfigurationValidationError, match="tts.voice: must not be empty"):
+        load_config(path, output_base=tmp_path)
+
+
+def test_config_rejects_out_of_range_tts_rate(tmp_path: Path):
+    path = tmp_path / "tutorial.toml"
+    path.write_text(VALID.replace("rate = 1.15", "rate = 2.5"))
+    with pytest.raises(ConfigurationValidationError, match="tts.rate: must be between 0.5 and 2.0"):
         load_config(path, output_base=tmp_path)

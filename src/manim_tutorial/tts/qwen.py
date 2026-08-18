@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -17,8 +19,24 @@ def build_voiceover_input_data(text: str, config: TTSConfig) -> dict[str, object
             "voice": config.voice,
             "language": config.language,
             "device": config.device,
+            "rate": config.rate,
         },
     }
+
+
+def build_atempo_command(source: Path, target: Path, rate: float) -> list[str]:
+    """Build the pitch-preserving FFmpeg command used for narration rate."""
+    return [
+        "ffmpeg",
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        str(source),
+        "-filter:a",
+        f"atempo={rate:g}",
+        str(target),
+    ]
 
 
 def resolve_device(requested: str, torch_module: Any) -> str:
@@ -72,7 +90,30 @@ class Qwen3SpeechService(TutorialSpeechService):
                     text=text, language=config.language, speaker=config.voice
                 )
                 audio = np.concatenate(wavs) if len(wavs) > 1 else wavs[0]
-                sf.write(target, audio, sample_rate)
+                if config.rate == 1.0:
+                    sf.write(target, audio, sample_rate)
+                else:
+                    with tempfile.TemporaryDirectory(
+                        prefix=".narration-", dir=audio_directory
+                    ) as temporary_directory:
+                        source = Path(temporary_directory) / "source.wav"
+                        sf.write(source, audio, sample_rate)
+                        target.unlink(missing_ok=True)
+                        try:
+                            subprocess.run(
+                                build_atempo_command(source, target, config.rate),
+                                check=True,
+                                capture_output=True,
+                                text=True,
+                            )
+                        except FileNotFoundError as exc:
+                            raise RuntimeError(
+                                "FFmpeg is required to apply the configured narration rate."
+                            ) from exc
+                        except subprocess.CalledProcessError as exc:
+                            raise RuntimeError(
+                                "FFmpeg failed while applying the configured narration rate."
+                            ) from exc
                 return VoiceoverData(
                     input_text=text,
                     input_data=build_voiceover_input_data(text, config),

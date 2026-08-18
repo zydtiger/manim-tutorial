@@ -21,6 +21,7 @@ model = "model"
 voice = "Ryan"
 language = "English"
 device = "cpu"
+rate = 1.15
 [captions]
 enabled = true
 burn = false
@@ -50,6 +51,7 @@ model = "model"
 voice = "Ryan"
 language = "English"
 device = "cpu"
+rate = 1.15
 [captions]
 enabled = false
 burn = false
@@ -109,6 +111,7 @@ model = "model"
 voice = "Ryan"
 language = "English"
 device = "cpu"
+rate = 1.15
 [captions]
 enabled = false
 burn = false
@@ -162,6 +165,7 @@ model = "model"
 voice = "Ryan"
 language = "English"
 device = "cpu"
+rate = 1.15
 [captions]
 enabled = false
 burn = false

@@ -11,6 +11,7 @@ class TTSConfig:
     voice: str
     language: str
     device: str
+    rate: float
 
 
 @dataclass(frozen=True)

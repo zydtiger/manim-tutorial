@@ -41,7 +41,7 @@ def test_scene_discovery_requires_choice_for_multiple_scenes(tmp_path: Path):
 
 def _config_with_captions(*, enabled: bool, burn: bool, device: str = "cpu") -> TutorialConfig:
     return TutorialConfig(
-        tts=TTSConfig("qwen3", "model", "Ryan", "English", device),
+        tts=TTSConfig("qwen3", "model", "Ryan", "English", device, 1.15),
         captions=CaptionsConfig(enabled, burn, 42),
         render=RenderConfig(640, 480, 15),
         output=OutputConfig(Path("output")),

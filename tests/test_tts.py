@@ -1,7 +1,11 @@
 import pytest
 
 from manim_tutorial.config.models import TTSConfig
-from manim_tutorial.tts.qwen import build_voiceover_input_data, resolve_device
+from manim_tutorial.tts.qwen import (
+    build_atempo_command,
+    build_voiceover_input_data,
+    resolve_device,
+)
 
 
 class _Cuda:
@@ -34,6 +38,7 @@ def test_voiceover_input_data_matches_cache_contract():
         voice="Ryan",
         language="English",
         device="auto",
+        rate=1.15,
     )
     assert build_voiceover_input_data("Explain eigenvectors.", config) == {
         "input_text": "Explain eigenvectors.",
@@ -43,5 +48,22 @@ def test_voiceover_input_data_matches_cache_contract():
             "voice": "Ryan",
             "language": "English",
             "device": "auto",
+            "rate": 1.15,
         },
     }
+
+
+def test_atempo_command_preserves_pitch_with_configured_rate(tmp_path):
+    source = tmp_path / "source.wav"
+    target = tmp_path / "target.wav"
+    assert build_atempo_command(source, target, 1.15) == [
+        "ffmpeg",
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        str(source),
+        "-filter:a",
+        "atempo=1.15",
+        str(target),
+    ]
