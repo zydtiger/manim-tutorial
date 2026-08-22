@@ -9,7 +9,7 @@ from ..config.models import TTSConfig
 from .base import TutorialSpeechService
 
 
-def build_voiceover_input_data(text: str, config: TTSConfig) -> dict[str, object]:
+def build_voiceover_input_data(text: str, config: TTSConfig) -> dict[str, Any]:
     """Build the cache identity required by manim-voiceover 0.4."""
     return {
         "input_text": text,

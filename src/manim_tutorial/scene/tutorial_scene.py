@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import json
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 from manim_voiceover import VoiceoverScene
 
@@ -67,7 +66,10 @@ class TutorialScene(VoiceoverScene):
                 self._timeline_path,
                 scene=self.__class__.__name__,
                 duration=float(self.renderer.time),
-                tts={"provider": self._tutorial_config.tts.provider, "voice": self._tutorial_config.tts.voice},
+                tts={
+                    "provider": self._tutorial_config.tts.provider,
+                    "voice": self._tutorial_config.tts.voice,
+                },
                 beats=self._beats,
             )
         finally:

@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from ..captions import burn_captions, write_srt
 from ..config import CONFIG_ENV, ManimTutorialConfigError, TutorialConfig
@@ -27,9 +28,9 @@ def discover_tutorial_scenes(tutorial: Path) -> list[str]:
         if not isinstance(node, ast.ClassDef):
             continue
         for base in node.bases:
-            if isinstance(base, ast.Name) and base.id == "TutorialScene":
-                names.append(node.name)
-            elif isinstance(base, ast.Attribute) and base.attr == "TutorialScene":
+            if (isinstance(base, ast.Name) and base.id == "TutorialScene") or (
+                isinstance(base, ast.Attribute) and base.attr == "TutorialScene"
+            ):
                 names.append(node.name)
     return names
 
@@ -49,12 +50,24 @@ def select_scene(tutorial: Path, requested_scene: str | None) -> str:
     )
 
 
-def manim_command(*, tutorial: Path, scene: str, config: TutorialConfig, media_dir: Path) -> list[str]:
+def manim_command(
+    *, tutorial: Path, scene: str, config: TutorialConfig, media_dir: Path
+) -> list[str]:
     return [
-        sys.executable, "-m", "manim", "render", str(tutorial), scene,
-        "--resolution", f"{config.render.width},{config.render.height}",
-        "--fps", str(config.render.fps),
-        "--media_dir", str(media_dir), "--output_file", "video",
+        sys.executable,
+        "-m",
+        "manim",
+        "render",
+        str(tutorial),
+        scene,
+        "--resolution",
+        f"{config.render.width},{config.render.height}",
+        "--fps",
+        str(config.render.fps),
+        "--media_dir",
+        str(media_dir),
+        "--output_file",
+        "video",
     ]
 
 
@@ -67,7 +80,13 @@ def _find_video(media_dir: Path) -> Path:
     return matches[0]
 
 
-def _remove_stale_artifacts(artifacts: ArtifactPaths, *, captions_enabled: bool, burn_captions_enabled: bool, beat_count: int) -> None:
+def _remove_stale_artifacts(
+    artifacts: ArtifactPaths,
+    *,
+    captions_enabled: bool,
+    burn_captions_enabled: bool,
+    beat_count: int,
+) -> None:
     """Remove only obsolete artifacts whose names are owned by this runtime."""
     if not captions_enabled:
         artifacts.subtitles.unlink(missing_ok=True)
@@ -79,7 +98,7 @@ def _remove_stale_artifacts(artifacts: ArtifactPaths, *, captions_enabled: bool,
             audio_file.unlink()
 
 
-def _load_fresh_timeline(path: Path, *, scene: str) -> dict[str, object]:
+def _load_fresh_timeline(path: Path, *, scene: str) -> dict[str, Any]:
     if not path.is_file():
         raise ManimTutorialConfigError(
             "Rendered scene did not produce fresh timeline metadata. "
@@ -88,7 +107,9 @@ def _load_fresh_timeline(path: Path, *, scene: str) -> dict[str, object]:
     try:
         timeline = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ManimTutorialConfigError("Rendered scene produced invalid timeline metadata.") from exc
+        raise ManimTutorialConfigError(
+            "Rendered scene produced invalid timeline metadata."
+        ) from exc
     if (
         not isinstance(timeline, dict)
         or timeline.get("scene") != scene
@@ -122,11 +143,15 @@ def render_tutorial(*, tutorial: Path, config: TutorialConfig, scene: str | None
         stage = Path(stage_name)
         staged_timeline = stage / "timeline.json"
         environment[TIMELINE_ENV] = str(staged_timeline)
-        command = manim_command(tutorial=tutorial, scene=selected_scene, config=config, media_dir=stage)
+        command = manim_command(
+            tutorial=tutorial, scene=selected_scene, config=config, media_dir=stage
+        )
         try:
             subprocess.run(command, check=True, env=environment)
         except subprocess.CalledProcessError as exc:
-            raise ManimTutorialConfigError(f"Manim render failed with exit code {exc.returncode}.") from exc
+            raise ManimTutorialConfigError(
+                f"Manim render failed with exit code {exc.returncode}."
+            ) from exc
         staged_video = _find_video(stage)
         timeline = _load_fresh_timeline(staged_timeline, scene=selected_scene)
         shutil.copy2(staged_video, artifacts.video)
@@ -148,7 +173,9 @@ def render_tutorial(*, tutorial: Path, config: TutorialConfig, scene: str | None
                         font_size=config.captions.font_size,
                     )
                 except FileNotFoundError as exc:
-                    raise ManimTutorialConfigError("FFmpeg is required to burn captions but was not found.") from exc
+                    raise ManimTutorialConfigError(
+                        "FFmpeg is required to burn captions but was not found."
+                    ) from exc
                 except subprocess.CalledProcessError as exc:
                     raise ManimTutorialConfigError("FFmpeg failed while burning captions.") from exc
         shutil.copy2(staged_timeline, artifacts.timeline)

@@ -50,7 +50,9 @@ def check_environment(config: TutorialConfig) -> tuple[bool, list[str]]:
     results.append(_status("Python", _supported_python(sys.version_info[:2]), sys.executable))
     results.append(_status("Manim", importlib.util.find_spec("manim") is not None))
     results.append(_status("FFmpeg", shutil.which("ffmpeg") is not None))
-    results.append(_status("LaTeX", shutil.which("latex") is not None and shutil.which("dvisvgm") is not None))
+    results.append(
+        _status("LaTeX", shutil.which("latex") is not None and shutil.which("dvisvgm") is not None)
+    )
     results.append(_status("provider", True, config.tts.provider))
     qwen_ok, qwen_detail = _probe_qwen_tts()
     results.append(_status("Qwen3 TTS package", qwen_ok, qwen_detail))
@@ -62,7 +64,11 @@ def check_environment(config: TutorialConfig) -> tuple[bool, list[str]]:
             import torch
 
             cuda_available = bool(torch.cuda.is_available())
-            resolved = ("cuda" if cuda_available else "cpu") if config.tts.device == "auto" else config.tts.device
+            resolved = (
+                ("cuda" if cuda_available else "cpu")
+                if config.tts.device == "auto"
+                else config.tts.device
+            )
             device_detail = f"requested {config.tts.device}, resolved {resolved}"
             device_ok = resolved != "cuda" or cuda_available
         except Exception as exc:
@@ -71,11 +77,23 @@ def check_environment(config: TutorialConfig) -> tuple[bool, list[str]]:
     else:
         device_detail = "torch is not installed"
     results.append(_status("TTS device", device_ok, device_detail))
-    results.append(_info("requested model", f"{config.tts.model} (unverified offline; downloads on first render)"))
-    results.append(_info("requested voice", f"{config.tts.voice} (unverified until the model is available)"))
+    results.append(
+        _info(
+            "requested model", f"{config.tts.model} (unverified offline; downloads on first render)"
+        )
+    )
+    results.append(
+        _info("requested voice", f"{config.tts.voice} (unverified until the model is available)")
+    )
     if config.captions.enabled:
         results.append(_status("SRT support", True))
     if config.captions.burn:
         results.append(_status("FFmpeg subtitle support", _has_ffmpeg_subtitles_filter()))
-    results.append(_status("render", True, f"{config.render.width}x{config.render.height} @ {config.render.fps} FPS"))
+    results.append(
+        _status(
+            "render",
+            True,
+            f"{config.render.width}x{config.render.height} @ {config.render.fps} FPS",
+        )
+    )
     return all(ok for ok, _ in results), [line for _, line in results]

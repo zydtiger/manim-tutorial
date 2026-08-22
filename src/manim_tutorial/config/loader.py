@@ -25,9 +25,7 @@ _SCHEMA: dict[str, dict[str, type]] = {
 
 
 def _format_errors(path: Path, errors: list[str]) -> ConfigurationValidationError:
-    return ConfigurationValidationError(
-        f"Invalid configuration: {path}\n\n" + "\n".join(errors)
-    )
+    return ConfigurationValidationError(f"Invalid configuration: {path}\n\n" + "\n".join(errors))
 
 
 def load_config(path: str | Path, *, output_base: Path | None = None) -> TutorialConfig:
@@ -81,9 +79,16 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
     for field in ("model", "voice", "language"):
         if not tts[field].strip():
             values.append(f"  tts.{field}: must not be empty")
-    for section, key in ((captions, "font_size"), (render, "width"), (render, "height"), (render, "fps")):
+    for section, key in (
+        (captions, "font_size"),
+        (render, "width"),
+        (render, "height"),
+        (render, "fps"),
+    ):
         if section[key] <= 0:
-            name = next(name for name, fields in _SCHEMA.items() if key in fields and fields[key] is int)
+            name = next(
+                name for name, fields in _SCHEMA.items() if key in fields and fields[key] is int
+            )
             values.append(f"  {name}.{key}: must be greater than zero")
     if not output["directory"].strip():
         values.append("  output.directory: must not be empty")

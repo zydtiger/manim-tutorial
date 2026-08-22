@@ -1,4 +1,5 @@
-from manim import Arrow, Create, Indicate, ORIGIN, PI, RIGHT, Rotate
+from manim import ORIGIN, PI, RIGHT, Arrow, Create, Indicate, Rotate
+
 from manim_tutorial import TutorialScene
 
 

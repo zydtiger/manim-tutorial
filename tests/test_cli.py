@@ -1,14 +1,20 @@
-import sys
 import builtins
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from manim_tutorial.cli.main import main
 from manim_tutorial.cli import check as check_module
-from manim_tutorial.config.models import CaptionsConfig, OutputConfig, RenderConfig, TTSConfig, TutorialConfig
+from manim_tutorial.cli.main import main
+from manim_tutorial.config.models import (
+    CaptionsConfig,
+    OutputConfig,
+    RenderConfig,
+    TTSConfig,
+    TutorialConfig,
+)
 from manim_tutorial.render.pipeline import discover_tutorial_scenes, select_scene
 
 
@@ -55,7 +61,9 @@ def test_check_treats_disabled_captions_as_ready(monkeypatch):
     monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
-    monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
+    monkeypatch.setattr(
+        check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python")
+    )
     ready, lines = check_module.check_environment(_config_with_captions(enabled=False, burn=False))
     assert ready is True
     assert not any("SRT support" in line or "subtitle support" in line for line in lines)
@@ -76,8 +84,12 @@ def test_check_reports_auto_device_cpu_fallback(monkeypatch):
     monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
-    monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
-    ready, lines = check_module.check_environment(_config_with_captions(enabled=False, burn=False, device="auto"))
+    monkeypatch.setattr(
+        check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python")
+    )
+    ready, lines = check_module.check_environment(
+        _config_with_captions(enabled=False, burn=False, device="auto")
+    )
     assert ready is True
     assert any("TTS device: requested auto, resolved cpu" in line for line in lines)
 
@@ -92,7 +104,9 @@ def test_check_reports_broken_torch_without_traceback(monkeypatch):
 
     monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
-    monkeypatch.setattr(check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python"))
+    monkeypatch.setattr(
+        check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python")
+    )
     monkeypatch.setattr(builtins, "__import__", broken_torch_import)
     ready, lines = check_module.check_environment(_config_with_captions(enabled=False, burn=False))
     assert ready is False

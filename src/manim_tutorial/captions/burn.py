@@ -11,10 +11,19 @@ def _escape_filter_path(path: Path) -> str:
 def burn_captions(*, video: Path, subtitles: Path, output: Path, font_size: int) -> list[str]:
     """Burn SRT captions using FFmpeg/libass and return the invoked command."""
     output.parent.mkdir(parents=True, exist_ok=True)
-    filter_value = f"subtitles='{_escape_filter_path(subtitles)}':force_style='Fontsize={font_size}'"
+    filter_value = (
+        f"subtitles='{_escape_filter_path(subtitles)}':force_style='Fontsize={font_size}'"
+    )
     command = [
-        "ffmpeg", "-y", "-i", str(video), "-vf", filter_value,
-        "-c:a", "copy", str(output),
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(video),
+        "-vf",
+        filter_value,
+        "-c:a",
+        "copy",
+        str(output),
     ]
     subprocess.run(command, check=True, capture_output=True, text=True)
     return command

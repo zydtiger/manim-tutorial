@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from ..config import ManimTutorialConfigError, load_config
 from .check import check_environment
@@ -12,7 +12,9 @@ from .render import execute_render
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="manim-tutorial")
     commands = parser.add_subparsers(dest="command", required=True)
-    check = commands.add_parser("check", help="validate explicit configuration and runtime prerequisites")
+    check = commands.add_parser(
+        "check", help="validate explicit configuration and runtime prerequisites"
+    )
     check.add_argument("--config")
     render = commands.add_parser("render", help="render a tutorial with explicit configuration")
     render.add_argument("tutorial")

@@ -24,6 +24,9 @@ configuration.
 - This repository's publication target is public GitHub. Keep every committed
   workflow self-contained, and do not add remotes, publish, push, tag, or
   release without explicit approval for that action.
+- Commit hooks are defined in `.pre-commit-config.yaml` and run with `prek`.
+  Install the runner once with `uv tool install prek`, then activate the hooks
+  in this checkout with `prek install`.
 
 ## Git
 

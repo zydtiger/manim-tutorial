@@ -5,8 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from manim_tutorial.config import ManimTutorialConfigError
-from manim_tutorial.config import load_config
+from manim_tutorial.config import ManimTutorialConfigError, load_config
 from manim_tutorial.render import create_artifact_paths
 from manim_tutorial.render.artifacts import ARTIFACT_OWNER_FILENAME
 from manim_tutorial.render.pipeline import manim_command, render_tutorial
@@ -14,7 +13,7 @@ from manim_tutorial.render.pipeline import manim_command, render_tutorial
 
 def test_manim_command_uses_current_python_and_explicit_render_fields(tmp_path: Path):
     config_file = tmp_path / "tutorial.toml"
-    config_file.write_text('''
+    config_file.write_text("""
 [tts]
 provider = "qwen3"
 model = "model"
@@ -32,7 +31,7 @@ height = 480
 fps = 15
 [output]
 directory = "output"
-''')
+""")
     config = load_config(config_file, output_base=tmp_path)
     command = manim_command(
         tutorial=tmp_path / "lesson.py", scene="Lesson", config=config, media_dir=tmp_path / "stage"
@@ -44,7 +43,7 @@ directory = "output"
 
 def test_successful_rerender_removes_only_stale_runtime_artifacts(tmp_path: Path, monkeypatch):
     config_file = tmp_path / "tutorial.toml"
-    config_file.write_text('''
+    config_file.write_text("""
 [tts]
 provider = "qwen3"
 model = "model"
@@ -62,7 +61,7 @@ height = 480
 fps = 15
 [output]
 directory = "output"
-''')
+""")
     config = load_config(config_file, output_base=tmp_path)
     tutorial = tmp_path / "lesson.py"
     tutorial.write_text("class Lesson: pass\n")
@@ -84,10 +83,23 @@ directory = "output"
         video.parent.mkdir(parents=True)
         video.write_text("new video")
         Path(env["MANIM_TUTORIAL_TIMELINE_PATH"]).write_text(
-            json.dumps({
-                "scene": "Lesson", "duration": 1, "tts": {"provider": "qwen3", "voice": "Ryan"},
-                "beats": [{"id": 1, "start": 0, "end": 1, "duration": 1, "speech": "One", "caption": "One"}],
-            })
+            json.dumps(
+                {
+                    "scene": "Lesson",
+                    "duration": 1,
+                    "tts": {"provider": "qwen3", "voice": "Ryan"},
+                    "beats": [
+                        {
+                            "id": 1,
+                            "start": 0,
+                            "end": 1,
+                            "duration": 1,
+                            "speech": "One",
+                            "caption": "One",
+                        }
+                    ],
+                }
+            )
         )
         return SimpleNamespace(returncode=0)
 
@@ -102,9 +114,11 @@ directory = "output"
     assert (artifacts.root / "notes.txt").exists()
 
 
-def test_same_owner_can_rerender_but_same_stem_collision_fails_before_manim(tmp_path: Path, monkeypatch):
+def test_same_owner_can_rerender_but_same_stem_collision_fails_before_manim(
+    tmp_path: Path, monkeypatch
+):
     config_file = tmp_path / "tutorial.toml"
-    config_file.write_text('''
+    config_file.write_text("""
 [tts]
 provider = "qwen3"
 model = "model"
@@ -122,7 +136,7 @@ height = 480
 fps = 15
 [output]
 directory = "output"
-''')
+""")
     config = load_config(config_file, output_base=tmp_path)
     first = tmp_path / "first" / "lesson.py"
     second = tmp_path / "second" / "lesson.py"
@@ -139,10 +153,23 @@ directory = "output"
         video.parent.mkdir(parents=True)
         video.write_text("video")
         Path(env["MANIM_TUTORIAL_TIMELINE_PATH"]).write_text(
-            json.dumps({
-                "scene": "Lesson", "duration": 1, "tts": {"provider": "qwen3", "voice": "Ryan"},
-                "beats": [{"id": 1, "start": 0, "end": 1, "duration": 1, "speech": "One", "caption": "One"}],
-            })
+            json.dumps(
+                {
+                    "scene": "Lesson",
+                    "duration": 1,
+                    "tts": {"provider": "qwen3", "voice": "Ryan"},
+                    "beats": [
+                        {
+                            "id": 1,
+                            "start": 0,
+                            "end": 1,
+                            "duration": 1,
+                            "speech": "One",
+                            "caption": "One",
+                        }
+                    ],
+                }
+            )
         )
         return SimpleNamespace(returncode=0)
 
@@ -156,9 +183,11 @@ directory = "output"
     assert len(calls) == 2
 
 
-def test_render_does_not_reuse_previous_timeline_when_scene_writes_none(tmp_path: Path, monkeypatch):
+def test_render_does_not_reuse_previous_timeline_when_scene_writes_none(
+    tmp_path: Path, monkeypatch
+):
     config_file = tmp_path / "tutorial.toml"
-    config_file.write_text('''
+    config_file.write_text("""
 [tts]
 provider = "qwen3"
 model = "model"
@@ -176,14 +205,15 @@ height = 480
 fps = 15
 [output]
 directory = "output"
-''')
+""")
     config = load_config(config_file, output_base=tmp_path)
     tutorial = tmp_path / "lesson.py"
     tutorial.write_text("class OrdinaryScene: pass\n")
     artifacts = create_artifact_paths(config.output.directory, tutorial)
     artifacts.root.mkdir(parents=True)
     (artifacts.root / ARTIFACT_OWNER_FILENAME).write_text(
-        json.dumps({"scene": "OrdinaryScene", "tutorial": str(tutorial.resolve())}, sort_keys=True) + "\n"
+        json.dumps({"scene": "OrdinaryScene", "tutorial": str(tutorial.resolve())}, sort_keys=True)
+        + "\n"
     )
     artifacts.timeline.write_text(json.dumps({"scene": "Old", "beats": [{"caption": "stale"}]}))
 
