@@ -28,7 +28,7 @@ Read [references/pedagogy.md](references/pedagogy.md) when selecting the core in
 
 ## Beat rules
 
-A beat normally contains one spoken idea, one short caption, and one primary visual action. Speech may be more natural and detailed than the caption. Do not add unrelated objects, notation, and a claim in the same beat. Do not stretch a transition to fill the narration: finish it promptly, hold the resolved state, and use a brief visual pause after an important transformation.
+A beat normally contains one spoken idea, one short caption, and one primary visual action. Speech may be more natural and detailed than the caption. Caption the meaning of the moment, not a transcript: never restate an equation or large label the beat just wrote on screen. Do not add unrelated objects, notation, and a claim in the same beat. Do not stretch a transition to fill the narration: finish it promptly, hold the resolved state, and use a brief visual pause after an important transformation.
 
 ## Review
 
