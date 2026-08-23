@@ -40,6 +40,35 @@ launches Manim.
 missing Manim, Qwen3-TTS, FFmpeg, LaTeX/dvisvgm, or an unavailable requested
 CUDA device as non-ready conditions.
 
+### TTS providers
+
+`tts.provider` selects one of two mutually exclusive `[tts]` schemas:
+
+- `qwen3` synthesizes narration with a preset speaker from a CustomVoice
+  checkpoint. Required fields: `provider`, `model`, `voice`, `language`,
+  `device`, `rate`.
+- `qwen3-clone` synthesizes narration in a cloned voice from a personal
+  reference recording, using a Base checkpoint. Required fields: `provider`,
+  `model`, `ref_audio`, `ref_text`, `language`, `device`, `rate`; there is no
+  `voice` field under this provider.
+
+`Qwen/Qwen3-TTS-12Hz-0.6B-Base` is a reasonable starting checkpoint for
+`qwen3-clone`; `Qwen/Qwen3-TTS-12Hz-1.7B-Base` is a configuration-only quality
+upgrade (same fields, a larger model).
+
+`ref_audio` points at a personal reference recording kept outside this
+repository, for example `~/voices/narrator.wav`; a relative path resolves
+against the configuration file's directory. Record roughly 10-20 seconds of
+clean, single-speaker speech with minimal background noise and reverb, and
+set `ref_text` to its exact transcript, punctuation and casing included. The
+voice clone prompt is built once per render and reused for every beat. Never
+commit a reference recording, its transcript, or a machine-local path into
+this repository; documented examples use placeholder paths only.
+
+The voiceover cache identity and the `timeline.json` manifest identify
+`qwen3-clone` narration by a sha256 hash of the reference audio's bytes,
+never by its local path.
+
 ## Tutorial API
 
 Tutorial files are ordinary Manim Python. They do not contain configuration

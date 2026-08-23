@@ -8,7 +8,7 @@ import pytest
 from manim_tutorial.config import ManimTutorialConfigError, load_config
 from manim_tutorial.render import create_artifact_paths
 from manim_tutorial.render.artifacts import ARTIFACT_OWNER_FILENAME
-from manim_tutorial.render.pipeline import manim_command, render_tutorial
+from manim_tutorial.render.pipeline import _load_fresh_timeline, manim_command, render_tutorial
 
 
 def test_manim_command_uses_current_python_and_explicit_render_fields(tmp_path: Path):
@@ -228,3 +228,39 @@ directory = "output"
     with pytest.raises(ManimTutorialConfigError, match="fresh timeline"):
         render_tutorial(tutorial=tutorial, config=config, scene="OrdinaryScene")
     assert json.loads(artifacts.timeline.read_text())["scene"] == "Old"
+
+
+def _write_timeline(path: Path, *, tts: dict) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "scene": "Lesson",
+                "duration": 1,
+                "tts": tts,
+                "beats": [
+                    {
+                        "id": 1,
+                        "start": 0,
+                        "end": 1,
+                        "duration": 1,
+                        "speech": "One",
+                        "caption": "One",
+                    }
+                ],
+            }
+        )
+    )
+
+
+def test_load_fresh_timeline_accepts_clone_provider_shape(tmp_path: Path):
+    path = tmp_path / "timeline.json"
+    _write_timeline(path, tts={"provider": "qwen3-clone", "reference": "deadbeef"})
+    timeline = _load_fresh_timeline(path, scene="Lesson")
+    assert timeline["tts"] == {"provider": "qwen3-clone", "reference": "deadbeef"}
+
+
+def test_load_fresh_timeline_rejects_tts_with_neither_voice_nor_reference(tmp_path: Path):
+    path = tmp_path / "timeline.json"
+    _write_timeline(path, tts={"provider": "qwen3-clone"})
+    with pytest.raises(ManimTutorialConfigError, match="invalid timeline metadata"):
+        _load_fresh_timeline(path, scene="Lesson")

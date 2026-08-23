@@ -9,7 +9,7 @@ from manim_voiceover import VoiceoverScene
 
 from ..config import ManimTutorialConfigError, load_config_from_environment
 from ..render.manifest import write_timeline
-from ..tts import create_speech_service
+from ..tts import create_speech_service, timeline_identity
 from .beat import TutorialBeat
 
 TIMELINE_ENV = "MANIM_TUTORIAL_TIMELINE_PATH"
@@ -66,10 +66,7 @@ class TutorialScene(VoiceoverScene):
                 self._timeline_path,
                 scene=self.__class__.__name__,
                 duration=float(self.renderer.time),
-                tts={
-                    "provider": self._tutorial_config.tts.provider,
-                    "voice": self._tutorial_config.tts.voice,
-                },
+                tts=timeline_identity(self._tutorial_config.tts),
                 beats=self._beats,
             )
         finally:

@@ -110,13 +110,14 @@ def _load_fresh_timeline(path: Path, *, scene: str) -> dict[str, Any]:
         raise ManimTutorialConfigError(
             "Rendered scene produced invalid timeline metadata."
         ) from exc
+    tts = timeline.get("tts") if isinstance(timeline, dict) else None
     if (
         not isinstance(timeline, dict)
         or timeline.get("scene") != scene
         or not isinstance(timeline.get("duration"), (int, float))
-        or not isinstance(timeline.get("tts"), dict)
-        or not isinstance(timeline["tts"].get("provider"), str)
-        or not isinstance(timeline["tts"].get("voice"), str)
+        or not isinstance(tts, dict)
+        or not isinstance(tts.get("provider"), str)
+        or not (isinstance(tts.get("voice"), str) or isinstance(tts.get("reference"), str))
         or not isinstance(timeline.get("beats"), list)
     ):
         raise ManimTutorialConfigError("Rendered scene produced invalid timeline metadata.")

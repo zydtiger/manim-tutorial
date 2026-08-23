@@ -8,10 +8,12 @@ from pathlib import Path
 class TTSConfig:
     provider: str
     model: str
-    voice: str
+    voice: str | None
     language: str
     device: str
     rate: float
+    ref_audio: Path | None = None
+    ref_text: str | None = None
 
 
 @dataclass(frozen=True)

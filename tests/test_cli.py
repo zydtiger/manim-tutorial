@@ -134,6 +134,55 @@ def test_qwen_probe_reports_broken_import(monkeypatch):
     assert detail == "cannot import Qwen3TTSModel: missing runtime library"
 
 
+def _clone_config_with_captions(
+    *, ref_audio: Path, ref_text: str, enabled: bool = False
+) -> TutorialConfig:
+    return TutorialConfig(
+        tts=TTSConfig("qwen3-clone", "model", None, "English", "cpu", 1.15, ref_audio, ref_text),
+        captions=CaptionsConfig(enabled, False, 42),
+        render=RenderConfig(640, 480, 15),
+        output=OutputConfig(Path("output")),
+        source_path=Path("tutorial.toml"),
+    )
+
+
+def test_check_reports_clone_reference_probes_without_loading_model(tmp_path: Path, monkeypatch):
+    ref_audio = tmp_path / "reference.wav"
+    ref_audio.write_bytes(b"fake reference audio bytes")
+    fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
+    monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
+    monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
+    monkeypatch.setattr(
+        check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python")
+    )
+    ready, lines = check_module.check_environment(
+        _clone_config_with_captions(ref_audio=ref_audio, ref_text="Hello, this is my voice.")
+    )
+    assert ready is True
+    assert any(f"✓ reference audio: {ref_audio}" in line for line in lines)
+    assert any("• reference transcript: 24 characters" in line for line in lines)
+    assert not any("requested voice" in line for line in lines)
+
+
+def test_check_reports_unreadable_reference_audio_as_not_ready(tmp_path: Path, monkeypatch):
+    missing = tmp_path / "missing.wav"
+    fake_torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "qwen_tts", SimpleNamespace(Qwen3TTSModel=object))
+    monkeypatch.setattr(check_module.importlib.util, "find_spec", lambda _: object())
+    monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/tool")
+    monkeypatch.setattr(
+        check_module, "sys", SimpleNamespace(version_info=(3, 12), executable="python")
+    )
+    ready, lines = check_module.check_environment(
+        _clone_config_with_captions(ref_audio=missing, ref_text="Hello, this is my voice.")
+    )
+    assert ready is False
+    assert any("✗ reference audio" in line for line in lines)
+
+
 def test_check_requires_ffmpeg_subtitles_filter_for_burn(monkeypatch):
     monkeypatch.setattr(check_module.shutil, "which", lambda _: "/usr/bin/ffmpeg")
     monkeypatch.setattr(
