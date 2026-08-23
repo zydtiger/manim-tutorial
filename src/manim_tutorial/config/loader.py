@@ -9,8 +9,8 @@ from .errors import ConfigurationValidationError, ManimTutorialConfigError
 from .models import CaptionsConfig, OutputConfig, RenderConfig, TTSConfig, TutorialConfig
 
 CONFIG_ENV = "MANIM_TUTORIAL_CONFIG"
-_SCHEMA: dict[str, dict[str, type]] = {
-    "tts": {
+_TTS_SCHEMAS: dict[str, dict[str, type]] = {
+    "qwen3": {
         "provider": str,
         "model": str,
         "voice": str,
@@ -18,6 +18,17 @@ _SCHEMA: dict[str, dict[str, type]] = {
         "device": str,
         "rate": float,
     },
+    "qwen3-clone": {
+        "provider": str,
+        "model": str,
+        "ref_audio": str,
+        "ref_text": str,
+        "language": str,
+        "device": str,
+        "rate": float,
+    },
+}
+_OTHER_SCHEMA: dict[str, dict[str, type]] = {
     "captions": {"enabled": bool, "burn": bool, "font_size": int},
     "render": {"width": int, "height": int, "fps": int},
     "output": {"directory": str},
@@ -41,10 +52,18 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
     errors: list[str] = []
     if not isinstance(raw, dict):
         raise _format_errors(source, ["Configuration must contain TOML tables."])
+    tts_raw = raw.get("tts")
+    provider_value = tts_raw.get("provider") if isinstance(tts_raw, dict) else None
+    provider: str = provider_value if isinstance(provider_value, str) else ""
+    # An unrecognized (or missing) provider still needs a deterministic schema
+    # to structurally validate against; fall back to qwen3 so missing/unknown
+    # field reporting stays well-defined, and reject the provider value below.
+    tts_schema = _TTS_SCHEMAS.get(provider, _TTS_SCHEMAS["qwen3"])
+    schema: dict[str, dict[str, type]] = {"tts": tts_schema, **_OTHER_SCHEMA}
     missing: list[str] = []
     extras: list[str] = []
     type_errors: list[str] = []
-    for table, fields in _SCHEMA.items():
+    for table, fields in schema.items():
         value = raw.get(table)
         if not isinstance(value, dict):
             missing.extend(f"{table}.{field}" for field in fields)
@@ -55,7 +74,7 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
             actual = value.get(field)
             if field in value and (type(actual) is not expected):
                 type_errors.append(f"  {table}.{field}: expected {expected.__name__}")
-    extras.extend(key for key in raw if key not in _SCHEMA)
+    extras.extend(key for key in raw if key not in schema)
     if missing:
         errors.append("Missing required fields:\n" + "\n".join(f"  {item}" for item in missing))
     if extras:
@@ -70,15 +89,33 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
     render = raw["render"]
     output = raw["output"]
     values: list[str] = []
-    if tts["provider"] != "qwen3":
-        values.append("  tts.provider: must be 'qwen3'")
+    if provider not in _TTS_SCHEMAS:
+        values.append("  tts.provider: must be one of qwen3, qwen3-clone")
     if tts["device"] not in {"auto", "cuda", "cpu"}:
         values.append("  tts.device: must be one of auto, cuda, cpu")
     if not 0.5 <= tts["rate"] <= 2.0:
         values.append("  tts.rate: must be between 0.5 and 2.0")
-    for field in ("model", "voice", "language"):
+    for field in ("model", "language"):
         if not tts[field].strip():
             values.append(f"  tts.{field}: must not be empty")
+    ref_audio_path: Path | None = None
+    if provider == "qwen3-clone":
+        if not tts["ref_text"].strip():
+            values.append("  tts.ref_text: must not be empty")
+        if not tts["ref_audio"].strip():
+            values.append("  tts.ref_audio: must not be empty")
+        else:
+            candidate = Path(tts["ref_audio"]).expanduser()
+            if not candidate.is_absolute():
+                candidate = source.parent / candidate
+            candidate = candidate.resolve()
+            if not candidate.is_file():
+                values.append(f"  tts.ref_audio: file does not exist: {candidate}")
+            else:
+                ref_audio_path = candidate
+    else:
+        if not tts["voice"].strip():
+            values.append("  tts.voice: must not be empty")
     for section, key in (
         (captions, "font_size"),
         (render, "width"),
@@ -87,7 +124,7 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
     ):
         if section[key] <= 0:
             name = next(
-                name for name, fields in _SCHEMA.items() if key in fields and fields[key] is int
+                name for name, fields in schema.items() if key in fields and fields[key] is int
             )
             values.append(f"  {name}.{key}: must be greater than zero")
     if not output["directory"].strip():
@@ -101,8 +138,28 @@ def load_config(path: str | Path, *, output_base: Path | None = None) -> Tutoria
     output_path = Path(output["directory"]).expanduser()
     if not output_path.is_absolute():
         output_path = base / output_path
+    if provider == "qwen3-clone":
+        tts_config = TTSConfig(
+            provider=provider,
+            model=tts["model"],
+            voice=None,
+            language=tts["language"],
+            device=tts["device"],
+            rate=tts["rate"],
+            ref_audio=ref_audio_path,
+            ref_text=tts["ref_text"],
+        )
+    else:
+        tts_config = TTSConfig(
+            provider=provider,
+            model=tts["model"],
+            voice=tts["voice"],
+            language=tts["language"],
+            device=tts["device"],
+            rate=tts["rate"],
+        )
     return TutorialConfig(
-        tts=TTSConfig(**tts),
+        tts=tts_config,
         captions=CaptionsConfig(**captions),
         render=RenderConfig(**render),
         output=OutputConfig(directory=output_path.resolve()),

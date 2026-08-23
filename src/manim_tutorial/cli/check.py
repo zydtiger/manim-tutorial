@@ -4,6 +4,7 @@ import importlib.util
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from ..config.models import TutorialConfig
 
@@ -32,6 +33,16 @@ def _has_ffmpeg_subtitles_filter() -> bool:
         check=False,
     )
     return completed.returncode == 0
+
+
+def _probe_reference_audio(ref_audio: Path) -> tuple[bool, str]:
+    """Verify the voice-clone reference recording exists and is readable."""
+    try:
+        with ref_audio.open("rb") as handle:
+            handle.read(4096)
+    except OSError as exc:
+        return False, f"cannot read {ref_audio}: {exc}"
+    return True, str(ref_audio)
 
 
 def _probe_qwen_tts() -> tuple[bool, str]:
@@ -82,9 +93,19 @@ def check_environment(config: TutorialConfig) -> tuple[bool, list[str]]:
             "requested model", f"{config.tts.model} (unverified offline; downloads on first render)"
         )
     )
-    results.append(
-        _info("requested voice", f"{config.tts.voice} (unverified until the model is available)")
-    )
+    if config.tts.provider == "qwen3-clone":
+        ref_audio = config.tts.ref_audio
+        assert ref_audio is not None  # loader invariant
+        ref_ok, ref_detail = _probe_reference_audio(ref_audio)
+        results.append(_status("reference audio", ref_ok, ref_detail))
+        ref_text = config.tts.ref_text or ""
+        results.append(_info("reference transcript", f"{len(ref_text)} characters"))
+    else:
+        results.append(
+            _info(
+                "requested voice", f"{config.tts.voice} (unverified until the model is available)"
+            )
+        )
     if config.captions.enabled:
         results.append(_status("SRT support", True))
     if config.captions.burn:

@@ -6,6 +6,18 @@ language = "English"
 device = "auto"
 rate = 1.15
 
+# Alternative: narrate in a cloned personal voice instead of a preset
+# speaker. Requires a Base checkpoint and has no `voice` field.
+#
+# [tts]
+# provider = "qwen3-clone"
+# model = "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
+# ref_audio = "~/voices/narrator.wav"
+# ref_text = "Exact transcript of the reference recording."
+# language = "English"
+# device = "auto"
+# rate = 1.15
+
 [captions]
 enabled = true
 burn = true
