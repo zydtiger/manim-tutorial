@@ -9,7 +9,7 @@ This repository is intended to remain independent of private tutorial content.
 
 ## Install
 
-Python 3.11 through 3.13 are supported. Python 3.12 is the pinned and
+Python 3.12 through 3.13 are supported. Python 3.12 is the pinned and
 recommended local development version:
 
 ```bash

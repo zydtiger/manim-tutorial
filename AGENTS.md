@@ -16,7 +16,7 @@ configuration.
 
 ## Development
 
-- Use `uv` and the `src/` package layout. Support Python 3.11 through 3.13;
+- Use `uv` and the `src/` package layout. Support Python 3.12 through 3.13;
   keep Python 3.12 as the default local development version.
 - Add focused tests for behavior changes. Tests must not require a model
   download, GPU, or a full Manim render unless explicitly marked integration.

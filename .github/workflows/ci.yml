@@ -15,6 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Kept as one job: the native Manim prerequisites make a second job's
+  # apt and sync cost far more than the commit-stage hooks it would save
+  # across a two-version matrix.
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13"]
 
     env:
       UV_PYTHON: ${{ matrix.python-version }}
@@ -47,16 +50,31 @@ jobs:
       - name: Install uv and Python
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.5"
           python-version: ${{ matrix.python-version }}
           enable-cache: true
+          cache-suffix: py${{ matrix.python-version }}
 
       - name: Install project
         run: uv sync --locked --dev
 
       - name: Run commit hooks
-        run: uvx prek@0.4.14 run --all-files
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        with:
+          prek-version: "0.4.x"
+
+      - name: Run push-stage hooks
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        with:
+          prek-version: "0.4.x"
+          extra-args: --all-files --hook-stage pre-push
 
       - name: Build package
         if: matrix.python-version == '3.12'
         run: uv build
+
+      - name: Install smoke test
+        if: matrix.python-version == '3.12'
+        run: |
+          uv venv "$RUNNER_TEMP/smoke"
+          uv pip install --python "$RUNNER_TEMP/smoke" dist/*.whl
+          "$RUNNER_TEMP/smoke/bin/manim-tutorial" --help
